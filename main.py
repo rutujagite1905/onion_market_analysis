@@ -1,19 +1,21 @@
 import os
+from dotenv import load_dotenv
 import pymysql
+load_dotenv()
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import pyttsx3           #voice
+import pyttsx3           #voice alert engine
 
 print("[SYSTEM] Onion Market Prediction Project Starting...")
 
-conn = pymysql.connect(
+conn = pymysql.connect( # connect the python project to the onion market MYSQL database
     host="127.0.0.1",
     user="root",
-    password="rutujasumit",
-    database="onionmarket"
-)
+    password=os.getenv("DB_PASSWORD"),
+    database="onionmarket"  # year,cultivated area,production million metric T, rainfall,export
+    )                         # required, wastage stock, buffer tock
 cursor = conn.cursor()
 print("[SUCCESS] Connected to database  successfully!")
 def load_data():
@@ -22,10 +24,10 @@ def load_data():
 df = load_data()
 print(df)
 print()
-print(df.describe())
+print(df.describe()) # basic statistical information about data
 print()
 
-avg_rainfall_mm = np.mean([df["rainfall_mm"]])
+avg_rainfall_mm = np.mean([df["rainfall_mm"]]) # calculate avg rainfall using numpy
 print("rainfall_mm:", avg_rainfall_mm) 
 print()
 
@@ -53,7 +55,7 @@ def show_stable_market_analysis_with_demand(dataframe):
         label="Yearly Market Data"
     )  
 # year labels
-    for i, txt in enumerate(dataframe["year"]):
+    for i, txt in enumerate(dataframe["year"]): #show yearly market data for each row
         plt.annotate(txt, (dataframe["rainfall_mm"].iloc[i], dataframe["production_mmt"].iloc[i]),
                      textcoords="offset points", xytext=(0,10), ha='center', fontsize=9, fontweight='bold')
 # stable market zone 800 to 900 mm
@@ -61,8 +63,8 @@ def show_stable_market_analysis_with_demand(dataframe):
 # graph labels
     plt.title("Stable Market Equilibrium: Weather, Production & Demand Analysis", fontsize=13, fontweight="bold", pad=15)
     plt.xlabel("Rainfall (mm) -> [Weather Condition]", fontsize=11)
-    plt.ylabel("Onion Production (MMT) -> [Market Supply]", fontsize=11)
-
+    plt.ylabel("Onion Production (MMT) -> [Market Supply]", fontsize=11)# represent onion production as available market supply
+# uses dot size to represent the cultivated area in hectors
     plt.text(775, 24.5, " Dot Size = cultivated Area (Hector)", fontsize=9, color="darkblue", style="italic")
 # Demand Color Bar
     cbar = plt.colorbar(scatter)
@@ -86,9 +88,9 @@ class OnionMarket:
 
         self.df = historical_dataframe
         self.total_years = len(historical_dataframe)
-# Historical Rain Average calculation
+# calculate the avg historical rainfall
         self.avg_rain_historical = historical_dataframe["rainfall_mm"].mean()
-# Average per Hectoe calculation
+# Average onio production Hectoe calculation
         avg_production = historical_dataframe["production_mmt"].mean()
         avg_area = historical_dataframe["cultivated_area_hector"].mean()
         self.base_yield = avg_production / avg_area if avg_area > 0 else 16.5
@@ -221,7 +223,7 @@ except ValueError:
     next_yr = 2026
     next_yr_rain = 840.0
     next_yr_area = 1.9
-# Prediction
+# Analysis
 predicted_prod = Market.predict_next_year_with_advisory(next_yr, next_yr_rain, next_yr_area)
 # Graph
 print("--- Generating Future Trend Prediction Graph ---")
@@ -261,7 +263,5 @@ plt.close()
 
 conn.close()
 print("[SUCCESS] Project Executed Successfully!")
-
-
 
 
